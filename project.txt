@@ -1,0 +1,16 @@
+Two users - 
+    1) admin 
+    2) User
+
+Admin - add/delete product, update the details about the project.( you have to use semaphores to lock it when the price/quantity is changed)
+user - display the product - productID,Pname,Cost
+     - display the cart
+    - add mutiple objects in the cart 
+     - modify the cart
+
+Payment Menu - 
+        You have to first check the error handling.
+        You have to also access the locks that is present in the product
+        Only one of the user will press the payment first, so if two customers have the same products then the one who goes into the payment method
+        will be able to buy and now the other musn't be able to.
+         
