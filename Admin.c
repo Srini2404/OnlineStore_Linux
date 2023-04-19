@@ -1,62 +1,188 @@
 # include <stdio.h>
+# include <stdlib.h>
 # include <unistd.h>
 # include <fcntl.h>
-
+# include <sys/socket.h>
+# include <string.h>
+# include <netinet/in.h>
+struct product{
+    int id;
+    char name[100];
+    int price;
+    int qty;
+};
+struct order{
+    int oid;
+    struct product cart[10];
+};
 int main(int argc,char*argv[])
 {
-    int sellerID=1;
-    int customerID=1;
-    while(1)
+    int fd = open(argv[1],O_CREAT|O_EXCL|O_RDWR);
+    struct product inven[100]; // this shall store the products that are present in the store.
+    struct order ord[100]; // This is used to keep track of the orders of the seller.
+    int idx = 0; // this is used for keeping track of the last product added(index).
+    for(int i=0;i<100;i++)
     {
-        printf("-------------------------------------------------------------------------------------------");
-        printf("This is the menu\n");
-        printf("Press 1 for registring as ADMIN\n");
-        printf("Press 2 for registering as USER\n");
-        printf("Press 3 for logging in as ADMIN\n");
-        printf("Press 4 for logging in as USER\n");
-        printf("Press 5 for exiting the interface\n");
-        int menu;scanf("%d",&menu);
-        if(menu == 1)
+        read(fd,&inven[i],sizeof(struct product));    
+    }
+    for(int i=0;i<100;i++)
+    {
+        read(fd,&ord[i],sizeof(struct order));
+    }
+    char menu='a';
+    scanf("%c",&menu);
+    if(menu=='c')
+    {
+        int sckfd = socket(AF_INET,SOCK_STREAM,0);
+        if(sckfd==0)
         {
-            char name[100];
-            printf("Please Enter your name\n");
-            scanf("%s",name);
-            sellerID++;
-
+            perror(" ");
         }
-        else if(menu==2)
+        struct sockaddr_in sckd,cli;
+        sckd.sin_addr.s_addr = INADDR_ANY;
+        sckd.sin_family = AF_INET;
+        sckd.sin_port = htons(8080);
+        if(bind(sckfd,(struct sockaddr*)&sckd,sizeof(sckd))==-1)
         {
-            char name[100];
-            printf("Please Enter your name\n");
-            scanf("%s",name);
-            customerID++;
+            perror(" ");
         }
-        else if(menu == 3)
+        int newsd;
+        listen(sckfd,5);
+        int counter = 0;
+        char temp[100];
+        while(1)
         {
-            printf("Please enter your adminID\n");
-            int id = -1;
-            scanf("%d",&id);
-
+            int clisize = sizeof(cli); 
+            if((newsd=accept(sckfd,(struct sockaddr*)&cli,&clisize))==-1)
+            {
+                perror(" ");
+            }
+            counter++;
+            if(!fork())
+            {
+                read(newsd,temp,100);
+                printf("The message from the %dth client is %s\n",counter,temp);
+            }
+            else
+            {
+                close(newsd);
+            }
         }
-        else if(menu == 4)
+    }
+    else if(menu=='s')
+    {
+        int option;
+        printf("The menu for server side data updation is");
+        printf("---------------------------------------------------------------------------------");
+        printf("Enter 1 to add a product\n");
+        printf("Enter 2 to delete a product\n");
+        printf("Enter 3 to update the quantity in the inventory\n");
+        printf("Enter 4 to update the price of a product\n");
+        scanf("%d",&option);
+        while(1)
         {
-            char name[100];
-            printf("Please Enter your name\n");
-            scanf("%s",name);
-            printf("Please enter your adminID\n");
-            int id = -1;
-            scanf("%d",&id);
-            
+            if(option==1)
+            {
+                struct product p1;
+                printf("Please enter the name of the product that you wish to be added\n");
+                scanf("%s",&p1.name);
+                printf("Please enter the id, quantity and the price respectively for the above mentioned product\n");
+                scanf("%d %d %d",&p1.id,&p1.qty,&p1.price);
+                int flg = 0;
+                for(int i=0;i<sizeof(inven);i++)
+                {
+                    if(inven[i].id==-1)
+                    {
+                        // here try writing the record locking functionality and then update the following.
+                        inven[i] = p1;
+                        flg = 1;
+                        break;
+                    }
+                }
+                if(flg==0)
+                {
+                    printf("Inventory full!,couldn't add the new item.");
+                }
+                // inven[idx++]=p1;
+            }
+            else if(option==2)
+            {
+                int id;
+                scanf("Enter the id of the product that has to be deleted :%d",&id);
+                int flg = 0;
+                for(int i=0;i<sizeof(inven);i++)
+                {
+                    if(inven[i].id==id)
+                    {
+                        inven[i].id=-1;
+                        flg = 1;
+                    }
+                }
+                if(!flg)
+                {
+                    printf("The given productID wasn't found\n");
+                }
+            }
+            else if(option==4)
+            {
+                // use record locking here also.
+                int id;
+                scanf("Enter the id of the product that has to be updated:%d",&id);
+                int price;
+                int flg=0;
+                scanf("Enter the new price of the product:%d",&price);
+                for(int i=0;i<sizeof(inven);i++)
+                {
+                    if(inven[i].id==id)
+                    {
+                        inven[i].price = price;
+                        flg = 1;
+                        break;
+                    }
+                }
+                if(!flg)
+                {
+                    printf("Invalid productID!");
+                }
+            }
+            else if(option==4)
+            {
+                // use record locking here also.
+                int id;
+                scanf("Enter the id of the product that has to be updated:%d",&id);
+                int qty;
+                int flg=0;
+                scanf("Enter the new qty of the product:%d",&qty);
+                for(int i=0;i<sizeof(inven);i++)
+                {
+                    if(inven[i].id==id)
+                    {
+                        inven[i].price = qty;
+                        flg = 1;
+                        break;
+                    }
+                }
+                if(!flg)
+                {
+                    printf("Invalid productID!");
+                }
+            }
+            else
+            {
+                printf("Invalid entry, try again later\n");
+            }
+            printf("The menu for server side data updation is");
+            printf("---------------------------------------------------------------------------------");
+            printf("Enter 1 to add a product\n");
+            printf("Enter 2 to delete a product\n");
+            printf("Enter 3 to update the quantity in the inventory\n");
+            printf("Enter 4 to update the price of a product\n");
+            printf("Enter 5 to exit the program\n");
+            scanf("%d",&option);    
         }
-        else if(menu==5)
-        {
-            printf("Logging you out of the servers\n");
-            printf("Please wait\n");
-            sleep(5);
-            printf("Thank you for your patience\n");
-            printf("You may close the window\n");
-            exit(1);
-        }
+    }
+    else {
+        printf("Invalid Input\n");
     }
     return 0;
 }
