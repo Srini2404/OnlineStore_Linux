@@ -12,6 +12,7 @@ int main(int argc,char*argv[])
     struct product inven[100]; // this shall store the products that are present in the store.
     struct order ord[100]; // This is used to keep track of the orders of the seller.
     int idx = 0; // this is used for keeping track of the last product added(index).
+    int odno = 0;
     for(int i=0;i<100;i++)
     {
         read(fd,&inven[i],sizeof(struct product));    
@@ -55,7 +56,7 @@ int main(int argc,char*argv[])
                 read(newsd,&val,4);
                 if(val==1)
                 {
-                    for(int i=0;i<sizeof(inven);i++)
+                    for(int i=0;i<100;i++)
                     {
                         if(inven[i].id!=-1)
                         {
@@ -70,14 +71,91 @@ int main(int argc,char*argv[])
                 }
                 else if(val==2)
                 {
-
+                    int value;
+                    read(newsd,&value,4);
+                    for(int i=0;i<100;i++)
+                    {
+                        if(ord[i].cusid==value)
+                        {
+                            write(newsd,&ord[i],sizeof(struct order));
+                            break;
+                        }
+                    }                
                 }
                 else if(val==3)
                 {
-
+                    int cusid;
+                    read(newsd,&cusid,4);
+                    char temp[100];
+                    read(newsd,temp,100);
+                    int qty;
+                    read(newsd,&qty,4);
+                    int flg =0;
+                    for(int i=0;i<100;i++)
+                    {
+                        if(strcmp(inven[i].name,temp)==0)
+                        {
+                            struct order o1;
+                            o1.oid = ++odno;
+                            o1.cusid = cusid;
+                        }
+                    }
+                    if(!flg)
+                    {
+                        printf("Order not processed\n");
+                    }
                 }
                 else if(val==4)
                 {
+                    int cusid;
+                    read(newsd,&cusid,4);
+                    // char temp[100];
+                    int oid;
+                    read(newsd,&oid,4);
+                    int pid;
+                    read(newsd,&pid,100);
+                    int qty;
+                    read(newsd,&qty,4);
+                    for(int i=0;i<100;i++)
+                    {
+                        if(ord[i].cusid==cusid)
+                        {
+                            if(ord[i].oid==oid)
+                            {
+                                for(int j=0;j<10;j++)
+                                {
+                                    if(ord[i].cart[j].id==pid)
+                                    {
+                                        if(qty==0)
+                                        {
+                                            ord[i].cart[j].qty= 0;
+                                            printf("The specified product has been sucessfully removed\n");
+                                        }
+                                        else if(qty<0)
+                                        {
+                                            printf("Invalid transaction\n");
+                                        }
+                                        else 
+                                        {
+                                            ord[i].cart[j].qty = qty;
+                                        }
+                                        break;
+                                   }
+                                }
+                                break;
+                            }
+                            break;
+                        }
+                        break;
+                    }
+                    int tid;
+                    read(newsd,&tid,4);
+                    if(tid==1)
+                    {
+                        // the transaction code must be written.
+                    }
+                    // else
+
 
                 }
             }
@@ -107,7 +185,7 @@ int main(int argc,char*argv[])
                 printf("Please enter the id, quantity and the price respectively for the above mentioned product\n");
                 scanf("%d %d %d",&p1.id,&p1.qty,&p1.price);
                 int flg = 0;
-                for(int i=0;i<sizeof(inven);i++)
+                for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==-1)
                     {
@@ -128,7 +206,7 @@ int main(int argc,char*argv[])
                 int id;
                 scanf("Enter the id of the product that has to be deleted :%d",&id);
                 int flg = 0;
-                for(int i=0;i<sizeof(inven);i++)
+                for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
                     {
@@ -141,7 +219,7 @@ int main(int argc,char*argv[])
                     printf("The given productID wasn't found\n");
                 }
             }
-            else if(option==4)
+            else if(option==3)
             {
                 // use record locking here also.
                 int id;
@@ -149,7 +227,7 @@ int main(int argc,char*argv[])
                 int price;
                 int flg=0;
                 scanf("Enter the new price of the product:%d",&price);
-                for(int i=0;i<sizeof(inven);i++)
+                for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
                     {
@@ -171,7 +249,7 @@ int main(int argc,char*argv[])
                 int qty;
                 int flg=0;
                 scanf("Enter the new qty of the product:%d",&qty);
-                for(int i=0;i<sizeof(inven);i++)
+                for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
                     {

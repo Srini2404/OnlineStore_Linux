@@ -7,5 +7,6 @@ struct product{
 };
 struct order{
     int oid;
+    int cusid;
     struct product cart[10];
 };

@@ -44,11 +44,14 @@ int main()
             if(p1.id!=0)
             {
                 printf("--------------------------------------------------------------------------\n");
-                printf("\n");
+                printf("Product ID   ProductName ProductQty Price\n");
+                printf("%d   %s    %d    %d\n",p1.id,p1.name,p1.qty,p1.price);
             }
             while(p1.id!=0)
             {
-                printf()
+                read(sckfd,&p1,sizeof(struct product));
+                printf("Product ID   ProductName ProductQty Price\n");
+                printf("%d   %s    %d    %d\n",p1.id,p1.name,p1.qty,p1.price);
             }
         }
         else if(option==2)
@@ -58,15 +61,35 @@ int main()
             int id;
             scanf("Please enter you customerID: %d",&id);
             write(sckfd,&id,4);
-            // here we have to retrieve the data sent from the server and then print it.
+            struct order or;
+            read(sckfd,&or,sizeof(struct order));
+            if(or.oid!=0|| or.oid!=-1)
+            {
+                printf("--------------------------------------------\n");
+                printf("OrderID CustomerID\n");
+                printf(" %d   %d\n",or.oid,or.cusid);
+                struct order ora[10];
+                int idx = 0;
+                if(ora[0].cusid!=0){
+                    printf("ProductID   ProductName  ProductQty  Price\n");
+                }
+                while(ora[idx].oid!=0)
+                {
+                    printf("%d    %s    %d\n",ora[idx].cart->id,ora[idx].cart->name,ora[idx].cart->qty);   
+                }
+            }
         }
         else if(option==3)
         {
             int val = 3;
             write(sckfd,&val,4);
             char name[100];
+            int cusid;
+            scanf("Enter your customerID %d",&cusid);
+            write(sckfd,&cusid,4);
             scanf("Enter the name of the product to be ordered:%s",name);
             write(sckfd,name,100);
+                        
             // think of what can be done here.
         }
         else if(option==4)
@@ -76,11 +99,12 @@ int main()
             char name[100];
             scanf("Enter the name of the product which you wish to modify:%s",name);
             int qty;
-            scanf("Enter the quantity you wish to order or enter -1 if you want to delete the product from your cart:%d",&qty);
+            scanf("Enter the quantity you wish to order or enter 0 if you want to delete the product from your cart:%d",&qty);
             write(sckfd,&qty,4);
             // Here we should be getting confirmation from the server and then we should
             // proceed to the payment.
-            scanf("Enter 1 to confirm the order and to proceed to payment: %d",&val);
+            scanf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.: %d",&val);
+            
 
         }
         else if(option==5)
