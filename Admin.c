@@ -5,16 +5,7 @@
 # include <sys/socket.h>
 # include <string.h>
 # include <netinet/in.h>
-struct product{
-    int id;
-    char name[100];
-    int price;
-    int qty;
-};
-struct order{
-    int oid;
-    struct product cart[10];
-};
+# include "items.h"
 int main(int argc,char*argv[])
 {
     int fd = open(argv[1],O_CREAT|O_EXCL|O_RDWR);
@@ -50,6 +41,7 @@ int main(int argc,char*argv[])
         listen(sckfd,5);
         int counter = 0;
         char temp[100];
+        int val;
         while(1)
         {
             int clisize = sizeof(cli); 
@@ -60,8 +52,34 @@ int main(int argc,char*argv[])
             counter++;
             if(!fork())
             {
-                read(newsd,temp,100);
-                printf("The message from the %dth client is %s\n",counter,temp);
+                read(newsd,&val,4);
+                if(val==1)
+                {
+                    for(int i=0;i<sizeof(inven);i++)
+                    {
+                        if(inven[i].id!=-1)
+                        {
+                            if(inven[i].qty!=0)
+                            {
+                                write(newsd,&inven[i],sizeof(struct product));
+                            }
+                        }
+                    }
+                    struct product p1;
+                    write(newsd,&p1,12);
+                }
+                else if(val==2)
+                {
+
+                }
+                else if(val==3)
+                {
+
+                }
+                else if(val==4)
+                {
+
+                }
             }
             else
             {

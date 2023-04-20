@@ -18,5 +18,7 @@ The objective of this project is to develop an online retail store management sy
 
 4 (Direct Terminal in Admin prog) - Update the price of the particular product
 
+# Important tips to keep in mind
 
+1) Never assign any ID value as zero - because this is the default value that the struct's id will be initialized to.
 
