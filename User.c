@@ -29,7 +29,9 @@ int main()
     printf("Enter 2 to see your cart\n");
     printf("Enter 3 to place your order\n");
     printf("Enter 4 to edit your cart\n");
-    printf("Enter 5 to exit");
+    printf("Enter 5 to confirm the order\n");
+    printf("Enter  6to exit");
+    // repeat the above in the end of the while loop.
     while(1)
     {
         scanf("%d",&option);
@@ -62,21 +64,25 @@ int main()
             scanf("Please enter you customerID: %d",&id);
             write(sckfd,&id,4);
             struct order or;
+            int idx = 0;
+            struct order ora[10];
             read(sckfd,&or,sizeof(struct order));
-            if(or.oid!=0|| or.oid!=-1)
+            // if(or.oid!=0|| or.oid!=-1)
+            while(ora[idx].oid!=0)
             {
                 printf("--------------------------------------------\n");
                 printf("OrderID CustomerID\n");
                 printf(" %d   %d\n",or.oid,or.cusid);
-                struct order ora[10];
-                int idx = 0;
                 if(ora[0].cusid!=0){
-                    printf("ProductID   ProductName  ProductQty  Price\n");
+                    printf("ProductID  ProductName  ProductQty  Price\n");
                 }
-                while(ora[idx].oid!=0)
+                    // printf("%d    %s    %d  %d\n",ora[idx].cart->id,ora[idx].cart->name,ora[idx].cart->qty,ora[idx].cart);   
+                for(int i=0;i<10;i++)
                 {
-                    printf("%d    %s    %d\n",ora[idx].cart->id,ora[idx].cart->name,ora[idx].cart->qty);   
+                    printf("%d  %s  %d   %d\n",ora[idx].cart[i].id,ora[idx].cart[i].name,ora[idx].cart[i].qty,ora[idx].cart[i].price);
                 }
+                read(sckfd,&or,sizeof(struct order));
+                    
             }
         }
         else if(option==3)
@@ -87,27 +93,57 @@ int main()
             int cusid;
             scanf("Enter your customerID %d",&cusid);
             write(sckfd,&cusid,4);
-            scanf("Enter the name of the product to be ordered:%s",name);
-            write(sckfd,name,100);
-                        
+            int noord;
+            scanf("Enter the number of products to be ordered %d\n",&noord);
+            write(sckfd,&noord,4);
+            while(noord--){
+                scanf("Enter the name of the product to be ordered:%s",name);
+                write(sckfd,name,100);
+                int qty;
+                scanf("Enter the quantity of the product to be ordered:%d",&qty);
+                write(sckfd,&qty,4);
+            }        
             // think of what can be done here.
         }
         else if(option==4)
         {
             int val = 4;
             write(sckfd,&val,4);
-            char name[100];
-            scanf("Enter the name of the product which you wish to modify:%s",name);
+            // char name[100];
+            // scanf("Enter the name of the product which you wish to modify:%s",name);
+            int cusid;
+            scanf("Enter the customerID:%d",&cusid);
+            write(sckfd,&cusid,4);
+            int oid;
+            scanf("Enter the orderID:%d",&oid);
+            write(sckfd,&oid,4);
+            int pid;
+            scanf("Enter the productID:%d",&pid);
+            write(sckfd,&pid,4);
             int qty;
             scanf("Enter the quantity you wish to order or enter 0 if you want to delete the product from your cart:%d",&qty);
             write(sckfd,&qty,4);
             // Here we should be getting confirmation from the server and then we should
             // proceed to the payment.
             scanf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.: %d",&val);
-            
+            // implement the add funcitonality of a completely new product.
 
         }
         else if(option==5)
+        {
+            int orderid;
+            scanf("Enter you orderID:%d",&orderid);
+            char temp[34];
+            read(sckfd,temp,34);
+            printf("%s",temp);
+            int otp;
+            read(sckfd,&otp,4);
+            scanf("OTP:%d",otp);
+            write(sckfd,&otp,4);
+            read(sckfd,&temp,23);
+            printf("%s",temp);            
+        }
+        else if(option==6)
         {
             break;
         }
