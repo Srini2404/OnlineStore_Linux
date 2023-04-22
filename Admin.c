@@ -9,8 +9,8 @@
 # include "items.h"
 int main(int argc,char*argv[])
 {
-    int fd = open(argv[1],O_CREAT|O_RDWR); // this shall store the products of that shop owner.
-    int fd2 = open(argv[2],O_CREAT|O_RDWR);
+    int fd = open(argv[1],O_RDWR); // this shall store the products of that shop owner.
+    int fd2 = open(argv[2],O_RDWR);
     struct product inven[100]; // this shall store the products that are present in the store.
     struct order ord[100]; // This is used to keep track of the orders of the seller.
     int idx = 0; // this is used for keeping track of the last product added(index).
@@ -19,6 +19,7 @@ int main(int argc,char*argv[])
     {
         read(fd,&inven[i],sizeof(struct product));    
     }
+    printf("The first value is:%d\n",inven[0].id);
     for(int i=0;i<100;i++)
     {
         read(fd2,&ord[i],sizeof(struct order));
@@ -27,6 +28,14 @@ int main(int argc,char*argv[])
             odno++;
         }
     }
+    for(int i=0;i<100;i++)
+    {
+        if(inven[i].id!=-1){
+            printf("The value where i!=-1 is\n");
+            printf("%d\n",i);
+        }
+    }
+
     char menu='a';
     printf("Enter c for receiving the requests from client\n");
     printf("Enter s for receving the requests from terminal(seller side functions)\n");
@@ -164,7 +173,7 @@ int main(int argc,char*argv[])
                     int oid;
                     read(newsd,&oid,4);
                     int pid;
-                    read(newsd,&pid,100);
+                    read(newsd,&pid,4);
                     int qty;
                     read(newsd,&qty,4);
                     for(int i=0;i<100;i++)
@@ -289,7 +298,7 @@ int main(int argc,char*argv[])
                         srand(time(0));
                         write(newsd,"Enter the OTP shown on the screen",34);
                         int otp = rand();
-                        write(newsd,otp,4);
+                        write(newsd,&otp,4);
                         int cotp;
                         read(newsd,&cotp,4);
                         if(cotp==otp)
@@ -333,8 +342,10 @@ int main(int argc,char*argv[])
         printf("---------------------------------------------------------------------------------\n");
         printf("Enter 1 to add a product\n");
         printf("Enter 2 to delete a product\n");
-        printf("Enter 3 to update the quantity in the inventory\n");
-        printf("Enter 4 to update the price of a product\n");
+        printf("Enter 3 to update the price in the inventory\n");
+        printf("Enter 4 to update the quantity of a product\n");
+        printf("Enter 5 to exit\n");
+
         scanf("%d",&option);
         while(1)
         {
@@ -342,32 +353,53 @@ int main(int argc,char*argv[])
             {
                 struct product p1;
                 printf("Please enter the name of the product that you wish to be added\n");
-                scanf("%s",&p1.name);
+                scanf("%s",p1.name);
                 printf("Please enter the id, quantity and the price respectively for the above mentioned product\n");
                 scanf("%d %d %d",&p1.id,&p1.qty,&p1.price);
                 int flg = 0;
+                int flg1 = 0;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
-                fl.l_start = SEEK_SET;
                 fl.l_type = F_WRLCK;
+                fl.l_whence = SEEK_SET;
                 for(int i=0;i<100;i++)
                 {
-                    if(inven[i].id==-1)
+                    if(inven[i].id==p1.id)
                     {
-                        // here try writing the record locking functionality and then update the following.
-                        fl.l_whence = (i+1)*(sizeof(struct product));
-                        fcntl(fd,F_SETLKW,&fl);
-                        write(fd,&p1,sizeof(struct product));
-                        sleep(2);
-                        inven[i] = p1;
-                        fcntl(fd,F_UNLCK);
-                        flg = 1;
+                        printf("This is a redundant product\n");
+                        flg1 = 1;
                         break;
                     }
                 }
-                if(flg==0)
+                if(!flg1){
+                    for(int i=0;i<100;i++)
+                    {
+                        if(inven[i].id==-1)
+                        {
+                            fl.l_start = (i)*(sizeof(struct product));
+                            // here try writing the record locking functionality and then update the following.
+                            int k = lseek(fd,(i)*sizeof(struct product),SEEK_SET);
+                            fcntl(fd,F_SETLKW,&fl);
+                            printf("The file descrip is in :%d",k);
+                            write(fd,&p1,sizeof(struct product));
+                            lseek(fd,-sizeof(struct product),SEEK_CUR);
+                            read(fd,&p1,sizeof(struct product));
+                            printf("The updated value when we have finished writing is:%d\n",p1.id);
+                            sleep(5);
+                            inven[i] = p1;
+                            fcntl(fd,F_UNLCK);
+                            flg = 1;
+                            break;
+                        }
+                    }
+                }
+                if(flg==0&&flg1==0)
                 {
                     printf("Inventory full! couldn't add the new item.");
+                }
+                else if(flg==1 && flg1==0)
+                {
+                    printf("The added has been added Successfully\n");
                 }
                 // inven[idx++]=p1;
             }
@@ -378,13 +410,14 @@ int main(int argc,char*argv[])
                 fl.l_len = sizeof(struct product);
                 fl.l_start = SEEK_SET;
                 fl.l_type = F_WRLCK;
-                scanf("Enter the id of the product that has to be deleted :%d",&id);
+                printf("Enter the id of the product that has to be deleted\n");
+                scanf("%d",&id);
                 int flg = 0;
                 for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
                     {
-                        fl.l_whence = (i+1)*(sizeof(struct product));
+                        fl.l_whence = (i)*(sizeof(struct product));
                         fcntl(fd,F_SETLKW,&fl);
                         inven[i].id=-1;
                         write(fd,&inven[i],sizeof(struct product));
@@ -413,20 +446,23 @@ int main(int argc,char*argv[])
                             }
                         }
                     }
+                    printf("The given item has been deleted successfully\n");
                 }    
             }
             else if(option==3)
             {
                 // use record locking here also.
                 int id;
-                scanf("Enter the id of the product that has to be updated:%d",&id);
+                printf("Enter the id of the product that has to be updated:\n");
+                scanf("%d",&id);
                 int price;
                 int flg=0;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
                 fl.l_start = SEEK_SET;
                 fl.l_type = F_WRLCK;
-                scanf("Enter the new price of the product:%d",&price);
+                printf("Enter the new price of the product:");
+                scanf("%d",&price);
                 for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
@@ -460,20 +496,23 @@ int main(int argc,char*argv[])
                             }
                         }
                     }
+                    printf("Price for the products has been updated\n");
                 }
             }
             else if(option==4)
             {
                 // use record locking here also.
                 int id;
-                scanf("Enter the id of the product that has to be updated:%d",&id);
+                printf("Enter the id of the product that has to be updated\n");
+                scanf("%d",&id);
                 int qty;
                 int flg=0;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
                 fl.l_start = SEEK_SET;
                 fl.l_type = F_WRLCK;
-                scanf("Enter the new qty of the product:%d",&qty);
+                printf("Enter the new qty of the product");
+                scanf("%d",&qty);
                 for(int i=0;i<100;i++)
                 {
                     if(inven[i].id==id)
@@ -491,17 +530,45 @@ int main(int argc,char*argv[])
                 {
                     printf("Invalid productID!");
                 }
+                else
+                {
+                    printf("The quantity for the products have been updated\n");
+                }
+            }
+            else if(option==5)
+            {
+                printf("The final inventory array is:\n");
+                for(int i=0;i<100;i++)
+                {
+                    if(inven[i].id!=-1){
+                        printf("The value where i!=-1 is\n");
+                        printf("%d\n",i);
+                    }
+                }
+                struct product p1;
+                lseek(fd,0,SEEK_SET);
+                int i=-1;
+                while(read(fd,&p1,sizeof(struct product)))
+                {
+                    i++;
+                    if(p1.id!=-1)
+                    {
+                        printf("%d\t%s\n",p1.id,p1.name);
+                        printf("%d\t%d\n", inven[i].id,i);
+                    }
+                }   
+                break;
             }
             else
             {
                 printf("Invalid entry, try again later\n");
             }
-            printf("The menu for server side data updation is");
-            printf("---------------------------------------------------------------------------------");
+            printf("The menu for server side data updation is\n");
+            printf("---------------------------------------------------------------------------------\n");
             printf("Enter 1 to add a product\n");
             printf("Enter 2 to delete a product\n");
-            printf("Enter 3 to update the quantity in the inventory\n");
-            printf("Enter 4 to update the price of a product\n");
+            printf("Enter 3 to update the price in the inventory\n");
+            printf("Enter 4 to update the quantity of a product\n");
             printf("Enter 5 to exit the program\n");
             scanf("%d",&option);    
         }

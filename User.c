@@ -61,7 +61,8 @@ int main()
             int val = 2;
             write(sckfd,&val,4);
             int id;
-            scanf("Please enter you customerID: %d",&id);
+            printf("Please enter you customerID:\n");
+            scanf("%d",&id);
             write(sckfd,&id,4);
             struct order or;
             int idx = 0;
@@ -91,16 +92,20 @@ int main()
             write(sckfd,&val,4);
             char name[100];
             int cusid;
-            scanf("Enter your customerID %d",&cusid);
+            printf("Enter your customerID\n");
+            scanf("%d",&cusid);
             write(sckfd,&cusid,4);
             int noord;
-            scanf("Enter the number of products to be ordered %d\n",&noord);
+            printf("Enter the number of products to be ordered\n");
+            scanf("%d",&noord);
             write(sckfd,&noord,4);
             while(noord--){
-                scanf("Enter the name of the product to be ordered:%s",name);
+                printf("Enter the name of the product to be ordered:\n");
+                scanf("%s",name);
                 write(sckfd,name,100);
                 int qty;
-                scanf("Enter the quantity of the product to be ordered:%d",&qty);
+                printf("Enter the quantity of the product to be ordered:\n");
+                scanf("%d",&qty);
                 write(sckfd,&qty,4);
             }        
             // think of what can be done here.
@@ -112,33 +117,39 @@ int main()
             // char name[100];
             // scanf("Enter the name of the product which you wish to modify:%s",name);
             int cusid;
-            scanf("Enter the customerID:%d",&cusid);
+            printf("Enter the customerID:\n");
+            scanf("%d",&cusid);
             write(sckfd,&cusid,4);
             int oid;
-            scanf("Enter the orderID:%d",&oid);
+            printf("Enter the orderID:\n");
+            scanf("%d",&oid);
             write(sckfd,&oid,4);
             int pid;
-            scanf("Enter the productID:%d",&pid);
+            printf("Enter the productID:\n");
+            scanf("%d",&pid);
             write(sckfd,&pid,4);
             int qty;
-            scanf("Enter the quantity you wish to order or enter 0 if you want to delete the product from your cart:%d",&qty);
+            printf("Enter the quantity you wish to order or enter 0 if you want to delete the product from your cart:\n");
+            scanf("%d",&qty);
             write(sckfd,&qty,4);
             // Here we should be getting confirmation from the server and then we should
             // proceed to the payment.
-            scanf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.: %d",&val);
+            printf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.:\n");
+            scanf("%d",&val);
             // implement the add funcitonality of a completely new product.
 
         }
         else if(option==5)
         {
             int orderid;
-            scanf("Enter you orderID:%d",&orderid);
+            printf("Enter you orderID:\n");
+            scanf("%d",&orderid);
             char temp[34];
             read(sckfd,temp,34);
             printf("%s",temp);
             int otp;
             read(sckfd,&otp,4);
-            scanf("OTP:%d",otp);
+            scanf("OTP:%d",&otp);
             write(sckfd,&otp,4);
             read(sckfd,&temp,23);
             printf("%s",temp);            
