@@ -13,4 +13,6 @@ Payment Menu -
         You have to also access the locks that is present in the product
         Only one of the user will press the payment first, so if two customers have the same products then the one who goes into the payment method
         will be able to buy and now the other musn't be able to.
-         
+
+
+option 2 from user to seller isn't working.         

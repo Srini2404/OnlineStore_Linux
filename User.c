@@ -3,6 +3,7 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <unistd.h>
+# include <string.h>
 // Client Cod
 // first run the server then run the client.
 # include "items.h"
@@ -12,6 +13,7 @@ int main()
     if(sckfd==-1)
     {
         perror(" ");
+        // return;
     }
     struct sockaddr_in sddr;
     sddr.sin_port = htons(8080);
@@ -27,10 +29,10 @@ int main()
     int option;
     printf("Enter 1 to see all the products listed\n");
     printf("Enter 2 to see your cart\n");
-    printf("Enter 3 to place your order\n");
+    printf("Enter 3 to create your order(new cart)\n");
     printf("Enter 4 to edit your cart\n");
     printf("Enter 5 to confirm the order\n");
-    printf("Enter  6to exit");
+    printf("Enter 6 to exit\n");
     // repeat the above in the end of the while loop.
     while(1)
     {
@@ -52,8 +54,11 @@ int main()
             while(p1.id!=0)
             {
                 read(sckfd,&p1,sizeof(struct product));
-                printf("Product ID   ProductName ProductQty Price\n");
-                printf("%d   %s    %d    %d\n",p1.id,p1.name,p1.qty,p1.price);
+                if(p1.id!=0)
+                {
+                    printf("Product ID   ProductName ProductQty Price\n");
+                    printf("%d   %s    %d    %d\n",p1.id,p1.name,p1.qty,p1.price);
+                }
             }
         }
         else if(option==2)
@@ -85,6 +90,9 @@ int main()
                 read(sckfd,&or,sizeof(struct order));
                     
             }
+            char t[25];
+            read(sckfd,t,25);
+            printf("%s",t);
         }
         else if(option==3)
         {
@@ -99,15 +107,26 @@ int main()
             printf("Enter the number of products to be ordered\n");
             scanf("%d",&noord);
             write(sckfd,&noord,4);
-            while(noord--){
-                printf("Enter the name of the product to be ordered:\n");
-                scanf("%s",name);
-                write(sckfd,name,100);
-                int qty;
-                printf("Enter the quantity of the product to be ordered:\n");
-                scanf("%d",&qty);
-                write(sckfd,&qty,4);
-            }        
+            char temp[50];
+            read(sckfd,temp,50);
+            if(strcpy(temp,"Order Invalid\n")==0)
+            {
+                printf("The following number of items can't be ordered\n");
+            }
+            else
+            {
+                while(noord--){
+                    printf("Enter the name of the product to be ordered:\n");
+                    scanf("%s",name);
+                    write(sckfd,name,100);
+                    int qty;
+                    printf("Enter the quantity of the product to be ordered:\n");
+                    scanf("%d",&qty);
+                    write(sckfd,&qty,4);
+                }
+            }
+            read(sckfd,temp,18);
+            printf("%s",temp);        
             // think of what can be done here.
         }
         else if(option==4)
@@ -132,12 +151,23 @@ int main()
             printf("Enter the quantity you wish to order or enter 0 if you want to delete the product from your cart:\n");
             scanf("%d",&qty);
             write(sckfd,&qty,4);
-            // Here we should be getting confirmation from the server and then we should
-            // proceed to the payment.
-            printf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.:\n");
-            scanf("%d",&val);
-            // implement the add funcitonality of a completely new product.
 
+            char temp[60];
+            // if(strcpy(temp,"Successfuly")==0|| strcpy(temp,"The product has been deleted\n")==0)
+            // {
+            //     // Here we should be getting confirmation from the server and then we should
+            //     // proceed to the payment.
+            //     printf("%s",temp);
+            //     printf("Enter 1 to confirm the order and to proceed to payment , any other value will just save the changes in the order.:\n");
+            //     scanf("%d",&val);
+            //     // implement the add funcitonality of a completely new product.
+            // }
+            // else
+            // {
+            //     printf("%s",temp);
+            read(sckfd,temp,60);
+            printf("%s",temp);
+            
         }
         else if(option==5)
         {
@@ -158,6 +188,17 @@ int main()
         {
             break;
         }
+        else
+        {
+            printf("Invalid option try again\n");
+        }
+
+        printf("Enter 1 to see all the products listed\n");
+        printf("Enter 2 to see your cart\n");
+        printf("Enter 3 to create your order(new cart)\n");
+        printf("Enter 4 to edit your cart\n");
+        printf("Enter 5 to confirm the order\n");
+        printf("Enter 6 to exit\n");
     // getchar();
     }
     shutdown(sckfd,2);

@@ -19,12 +19,13 @@ int main(int argc,char*argv[])
     {
         read(fd,&inven[i],sizeof(struct product));    
     }
-    printf("The first value is:%d\n",inven[0].id);
+    // printf("The first value is:%d\n",inven[0].id);
     for(int i=0;i<100;i++)
     {
         read(fd2,&ord[i],sizeof(struct order));
-        if(ord[i].oid!=0)
+        if(ord[i].oid!=-1)
         {
+            printf("The index where orderno !=1 %d\n",i);
             odno++;
         }
     }
@@ -75,7 +76,7 @@ int main(int argc,char*argv[])
                 {
                     for(int i=0;i<100;i++)
                     {
-                        if(inven[i].id!=0)
+                        if(inven[i].id!=-1)
                         {
                             if(inven[i].qty!=0)
                             {
@@ -88,18 +89,31 @@ int main(int argc,char*argv[])
                 }
                 else if(val==2)
                 {
+                    
                     int cusid;
                     read(newsd,&cusid,4);
+                    int flg = 0;
                     for(int i=0;i<100;i++)
                     {
                         if(ord[i].cusid==cusid)
                         {
                             write(newsd,&ord[i],sizeof(struct order));
+                            flg = 1;
                             break;
                         }
                     }
                     struct order o1;
-                    write(newsd,&o1,sizeof(struct order));               
+                    write(newsd,&o1,sizeof(struct order)); 
+                    if(flg)
+                    {
+                        printf("End of cart\n");      
+                        write(newsd,"End of the cart\n",17);       
+                    }
+                    else
+                    {
+                        printf("Invalid CustomerID\n");
+                        write(newsd,"Invalid customerID\n",20);
+                    }
                 }
                 else if(val==3)
                 {
@@ -108,60 +122,148 @@ int main(int argc,char*argv[])
                     read(newsd,&cusid,4);
                     int noord;
                     read(newsd,&noord,4);
-                    if(noord>10)
+                    // Here we should first check if the number of products mentioned
+                    // plus the number of items in the cart is less than or equal to 10;
+                    int flg = 0;
+                    for(int i=0;i<100;i++)
                     {
-                        printf("Not possible\n");
-                    }
-                    int flg =0;
-                    int ordflg =0;
-                    while(noord--){
-                        char temp[100];
-                        read(newsd,temp,100);
-                        int qty;
-                        read(newsd,&qty,4);
-                        
-                        for(int i=0;i<100;i++)
+                        if(ord[i].cusid==cusid)
                         {
-                            if(strcmp(inven[i].name,temp)==0)
+                            if(ord[i].status==0)
                             {
-                                struct product p1;
-                                if(inven[i].qty>=qty)
+                                o1=ord[i];
+                                flg = 1;
+                                break;
+                            }
+                        }
+                    }
+                    if(flg==1)
+                    {
+                        if(noord<0)
+                        {
+                            printf("Error\n");
+                            write(newsd,"Order Invalid\n",15);
+                        }
+                        else
+                        {
+                            if(o1.status!=1)
+                            {
+                                if(o1.pidx+noord>10)
                                 {
-                                    if(flg==0)
-                                    {
-                                        flg=1;
-                                        o1.oid = ++odno;
-                                        o1.cusid = cusid;
-                                    }
-                                    p1.id = inven[i].id;
-                                    strcpy(p1.name,inven[i].name);
-                                    p1.price = inven[i].price;
-                                    p1.qty = qty;
-                                    // the quantity shall be decreased from the struct
-                                    // only when the transaction is complete.
+                                    printf("Error\n");
+                                    write(newsd,"Order Invalid\n",15);
                                 }
                                 else
                                 {
-                                    if(ordflg==0)
+                                    write(newsd,"1",1); // 1 means proceed forward
+                                    int chk=0;
+                                    // o1.pidx+=noord;
+                                    while(noord--)
                                     {
-                                        ordflg=1;
+                                        // struct product p1;
+                                        char name[100];
+                                        read(sckfd,name,100);
+                                        int qty;
+                                        read(sckfd,&qty,4);
+                                        for(int i=0;i<100;i++)
+                                        {
+                                            if(inven[i].id!=-1)
+                                            {
+                                                if((strcpy(inven[i].name,name))==0)
+                                                {
+                                                    if(inven[i].qty>=qty)
+                                                    {
+                                                        o1.cart[o1.pidx++] = inven[i];
+                                                        break;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    printf("Error Couldn't place the order\n");
+                                                    chk = 1;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if(chk)
+                                        {
+                                            break;
+                                        }
+                                        
+                                    }
+                                    if(!chk)
+                                    {
+                                        write(newsd,"Order Successfully Placed\n",27);
+                                        printf("Order added to cart Successfully\n");
+                                    }
+                                    else
+                                    {
+                                        write(newsd,"Error Placing Order\n",21);
                                     }
                                 }
-                                
                             }
-                        }
-                        if(ordflg)
-                        {
-                            printf("Order not processed\n");
-                            if(flg){
-                                odno--;
+                            else
+                            {
+                                write(newsd,"Order Invalid\n",15);
+                                printf("Invalid Order\n");
                             }
-                            break;
                         }
                     }
-                    if(!ordflg)
+                    else if(flg==0)
                     {
-                        ord[odno] = o1;
+                        if(noord>10|| noord <=0)
+                        {
+                            printf("Error with data\n");
+                            write(newsd,"Order Invalid\n",15);
+                        }
+                        else
+                        {
+                            write(newsd,"1",1);
+                            char temp[100];
+                            while(noord--)
+                            {
+                                read(sckfd,temp,100);
+                                int qty;
+                                read(sckfd,&qty,4);
+                                
+                                for(int i=0;i<100;i++)
+                                {
+                                    if(inven[i].id!=-1)
+                                    {
+                                        if((strcpy(inven[i].name,temp))==0)
+                                        {
+                                            if(inven[i].qty>=qty)
+                                            {
+                                                o1.cart[o1.pidx++] = inven[i];
+                                                
+                                                break;   
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            struct flock fl;
+                            fl.l_len = sizeof(struct order);
+                            fl.l_whence = SEEK_SET;
+                            fl.l_type = F_WRLCK;
+                            
+                            for(int i=0;i<100;i++)
+                            {
+                                if(ord[i].oid==-1)
+                                {
+                                    fl.l_start = (i)*(sizeof(struct order));
+                                    lseek(fd2,(i)*sizeof(struct order),SEEK_SET);
+                                    ord[i] = o1;
+                                    write(fd2,&ord[i],sizeof(struct order));
+                                    fl.l_type = F_UNLCK;
+                                    sleep(3);
+                                    fcntl(fd2,F_UNLCK,&fl); 
+                                    write(newsd,"Order Successful\n",18);
+                                    printf("A new order has been created successfully\n");
+                                    break;
+                                }
+                            }
+                        }
                     }
                     
                 }
@@ -189,11 +291,13 @@ int main(int argc,char*argv[])
                                         if(qty==0)
                                         {
                                             ord[i].cart[j].qty= 0;
+                                            write(newsd,"The product has been deleted\n",30);
                                             printf("The specified product has been sucessfully removed\n");
                                         }
                                         else if(qty<0)
                                         {
                                             printf("Invalid transaction\n");
+                                            write(newsd,"Invalid transaction\n",21);
                                         }
                                         else 
                                         {
@@ -210,10 +314,13 @@ int main(int argc,char*argv[])
                                                         if(inven[i].qty>=qty)
                                                         {
                                                             ord[i].cart[j].qty = qty;
+                                                            printf("Successful\n");
+                                                            write(newsd,"Successful\n",12);
                                                             break;
                                                         }
                                                         else
                                                         {
+                                                            write(newsd,"Not possible\n",14);
                                                             printf("Sorry not possible\n");
                                                             break;
                                                         }
@@ -275,7 +382,7 @@ int main(int argc,char*argv[])
                                     prod[idx] = ps[i];
                                     prod[idx].qty = p1.qty - ps[i].qty; 
                                     arr[idx] = p1.id;
-                                    curidx[idx++] = lseek(fd,0,SEEK_CUR);
+                                    curidx[idx++] = lseek(fd,-sizeof(struct product),SEEK_CUR);
                                 }
                                 else
                                 {
@@ -309,7 +416,7 @@ int main(int argc,char*argv[])
                                 fcntl(fd,F_SETLKW,&fl);
                                 sleep(2);
                                 write(fd,&prod[i],sizeof(struct product));
-                                
+                                fl.l_type = F_UNLCK;
                                 fcntl(fd,F_UNLCK);
                             }
                             for(int i=0;i<10;i++)
@@ -325,6 +432,11 @@ int main(int argc,char*argv[])
                             printf("Transaction Successful\n");
                             write(newsd,"Transaction Successful",23);
                             
+                        }
+                        else
+                        {
+                            printf("Transaction Failed\n");
+                            write(sckfd,"Transaction Failed\n",20);
                         }
                     }
                 }
@@ -387,7 +499,8 @@ int main(int argc,char*argv[])
                             printf("The updated value when we have finished writing is:%d\n",p1.id);
                             sleep(5);
                             inven[i] = p1;
-                            fcntl(fd,F_UNLCK);
+                            fl.l_type = F_UNLCK;
+                            fcntl(fd,F_UNLCK,&fl);
                             flg = 1;
                             break;
                         }
@@ -408,7 +521,7 @@ int main(int argc,char*argv[])
                 int id;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
-                fl.l_start = SEEK_SET;
+                fl.l_whence = SEEK_SET;
                 fl.l_type = F_WRLCK;
                 printf("Enter the id of the product that has to be deleted\n");
                 scanf("%d",&id);
@@ -417,13 +530,15 @@ int main(int argc,char*argv[])
                 {
                     if(inven[i].id==id)
                     {
-                        fl.l_whence = (i)*(sizeof(struct product));
+                        fl.l_start = (i)*(sizeof(struct product));
+                        lseek(fd,(i)*sizeof(struct product),SEEK_SET);
                         fcntl(fd,F_SETLKW,&fl);
                         inven[i].id=-1;
                         write(fd,&inven[i],sizeof(struct product));
                         sleep(2);
                         flg = 1;
-                        fcntl(fd,F_UNLCK);
+                        fl.l_type = F_UNLCK;
+                        fcntl(fd,F_UNLCK,&fl);
                     }
                 }
                 if(!flg)
@@ -459,7 +574,7 @@ int main(int argc,char*argv[])
                 int flg=0;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
-                fl.l_start = SEEK_SET;
+                fl.l_whence = SEEK_SET;
                 fl.l_type = F_WRLCK;
                 printf("Enter the new price of the product:");
                 scanf("%d",&price);
@@ -467,13 +582,15 @@ int main(int argc,char*argv[])
                 {
                     if(inven[i].id==id)
                     {
-                        fl.l_whence = (i+1)*(sizeof(struct product));
+                        fl.l_start = (i)*(sizeof(struct product));
+                        lseek(fd,(i)*sizeof(struct product),SEEK_SET);
                         fcntl(fd,F_SETLKW,&fl);
                         inven[i].price = price;
                         write(fd,&inven[i],sizeof(struct product));
                         sleep(2);
                         flg = 1;
-                        fcntl(fd,F_UNLCK);
+                        fl.l_start = F_UNLCK;
+                        fcntl(fd,F_UNLCK,&fl);
                         break;
                     }
                 }
@@ -509,7 +626,7 @@ int main(int argc,char*argv[])
                 int flg=0;
                 struct flock fl;
                 fl.l_len = sizeof(struct product);
-                fl.l_start = SEEK_SET;
+                fl.l_whence = SEEK_SET;
                 fl.l_type = F_WRLCK;
                 printf("Enter the new qty of the product");
                 scanf("%d",&qty);
@@ -517,12 +634,14 @@ int main(int argc,char*argv[])
                 {
                     if(inven[i].id==id)
                     {
-                        fl.l_whence = (i+1)*(sizeof(struct product));
+                        fl.l_start = (i)*(sizeof(struct product));
+                        lseek(fd,(i)*sizeof(struct product),SEEK_SET);
                         fcntl(fd,F_SETLKW,&fl);
                         inven[i].qty = qty;
                         sleep(2);
                         flg = 1;
-                        fcntl(fd,F_UNLCK);
+                        fl.l_type = F_UNLCK;
+                        fcntl(fd,F_UNLCK,&fl);
                         break;
                     }
                 }

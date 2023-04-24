@@ -14,10 +14,10 @@ int main(int argc,char*argv[])
     o1.oid = -1;
     lseek(fd,0,SEEK_SET);
     lseek(fd1,0,SEEK_SET);
-    for(int i=0;i<100;i++)
-    {
-        write(fd,&p1,sizeof(struct product));
-    }
+    // for(int i=0;i<100;i++)
+    // {
+    //     write(fd,&p1,sizeof(struct product));
+    // }
     for(int i=0;i<100;i++)
     {
         write(fd1,&o1,sizeof(struct order));

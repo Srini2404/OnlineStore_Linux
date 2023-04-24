@@ -22,6 +22,7 @@ The objective of this project is to develop an online retail store management sy
 
 
 
+* status 1 in the order struct means that the order has been purchased.
 
 # Testing requirements :-
 

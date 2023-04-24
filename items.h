@@ -9,4 +9,6 @@ struct order{
     int oid;
     int cusid;
     struct product cart[10];
+    int status;
+    int pidx;
 };
