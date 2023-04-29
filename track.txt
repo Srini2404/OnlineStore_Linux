@@ -1,0 +1,7 @@
+Products added in the inventory : 
+1) Soap(1,10,35)
+2) Pencil(2,10,10)
+
+
+CustomerCarts:
+1) (100,2,

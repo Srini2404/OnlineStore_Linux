@@ -12,7 +12,7 @@ int main(int argc,char*argv[])
     p1.id = -1;
     struct order o1;
     o1.oid = -1;
-    lseek(fd,0,SEEK_SET);
+    // lseek(fd,0,SEEK_SET);
     lseek(fd1,0,SEEK_SET);
     // for(int i=0;i<100;i++)
     // {

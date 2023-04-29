@@ -71,24 +71,25 @@ int main()
             write(sckfd,&id,4);
             struct order or;
             int idx = 0;
-            struct order ora[10];
+            // struct order ora[10];
             read(sckfd,&or,sizeof(struct order));
             // if(or.oid!=0|| or.oid!=-1)
-            while(ora[idx].oid!=0)
+            while(or.oid!=0)
             {
                 printf("--------------------------------------------\n");
                 printf("OrderID CustomerID\n");
                 printf(" %d   %d\n",or.oid,or.cusid);
-                if(ora[0].cusid!=0){
+                if(or.cusid!=0){
                     printf("ProductID  ProductName  ProductQty  Price\n");
                 }
                     // printf("%d    %s    %d  %d\n",ora[idx].cart->id,ora[idx].cart->name,ora[idx].cart->qty,ora[idx].cart);   
                 for(int i=0;i<10;i++)
                 {
-                    printf("%d  %s  %d   %d\n",ora[idx].cart[i].id,ora[idx].cart[i].name,ora[idx].cart[i].qty,ora[idx].cart[i].price);
+                    if (or.cart[i].id != 0)
+                    printf("%d  %s  %d   %d\n",or.cart[i].id,or.cart[i].name,or.cart[i].qty,or.cart[i].price);
                 }
                 read(sckfd,&or,sizeof(struct order));
-                    
+                
             }
             char t[25];
             read(sckfd,t,25);
@@ -102,19 +103,23 @@ int main()
             int cusid;
             printf("Enter your customerID\n");
             scanf("%d",&cusid);
-            write(sckfd,&cusid,4);
+            if(write(sckfd,&cusid,4)==-1)
+            {
+                printf("Error\n");
+            }
             int noord;
             printf("Enter the number of products to be ordered\n");
             scanf("%d",&noord);
             write(sckfd,&noord,4);
             char temp[50];
             read(sckfd,temp,50);
-            if(strcpy(temp,"Order Invalid\n")==0)
+            if(strcmp(temp,"Order Invalid\n")==0)
             {
                 printf("The following number of items can't be ordered\n");
             }
             else
             {
+                printf("Entered Here\n");
                 while(noord--){
                     printf("Enter the name of the product to be ordered:\n");
                     scanf("%s",name);
@@ -174,15 +179,32 @@ int main()
             int orderid;
             printf("Enter you orderID:\n");
             scanf("%d",&orderid);
+            write(sckfd,&orderid,4);
+
             char temp[34];
             read(sckfd,temp,34);
-            printf("%s",temp);
-            int otp;
-            read(sckfd,&otp,4);
-            scanf("OTP:%d",&otp);
-            write(sckfd,&otp,4);
-            read(sckfd,&temp,23);
-            printf("%s",temp);            
+            if(strcmp(temp,"Error\n")==0)
+            {
+                printf("Invalid OrderID\n");
+                continue;
+            }
+            else if(strcmp(temp,"Error1\n")==0)
+            {
+                printf("Order Couldn't be placed due to unavailability of stock\n");
+
+            }
+            else
+            {
+                printf("%s",temp);
+                int otp;
+                read(sckfd,&otp,4);
+                printf("Enter OTP displayed on the screen\n");
+                printf("%d\n",otp);
+                scanf("OTP:%d",&otp);
+                write(sckfd,&otp,4);
+                read(sckfd,&temp,23);
+                printf("%s",temp);
+            }            
         }
         else if(option==6)
         {
