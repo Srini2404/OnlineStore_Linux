@@ -559,10 +559,39 @@ int main(int argc,char*argv[])
                                     }
                                     // create a log file.
                                     // make the orderid -1.
-                                    
+                                    FILE * fp;
+                                    fp = fopen(argv[3],"w"); // this is the log file that is generated.
+                                    int amount = 0;
+                                    for(int i=0;i<10;i++)
+                                    {
+                                        if(ps[i].id!=0)
+                                        {
+                                            fwrite("\nProductID ",11,1,fp);
+                                            fwrite(&ps[i].id,sizeof(int),1,fp);
+                                            fwrite("\nProduct Name ",15,1,fp);
+                                            fwrite(&ps[i].name,100,1,fp);
+                                            fwrite("\nPrice ",8,1,fp);
+                                            fwrite(&ps[i].price,sizeof(int),1,fp);
+                                            amount+=ps[i].price;
+                                            fwrite("\nQuantity ",11,1,fp);
+                                            fwrite(&ps[i].qty,4,1,fp);
+                                        }
+                                        
+                                    }
+                                    fwrite("\n Total Price of the bill: ",28,1,fp);
+                                    fwrite("\nThanks for shopping with,Have a great day!",44,1,fp);
+                                    fclose(fp);
+                                    for(int i=0;i<100;i++)
+                                    {
+
+                                        if(ord[i].oid = orderid)
+                                        {
+                                           ord[i].oid = -1;
+                                           break;
+                                        }
+                                    }
                                     printf("Transaction Successful\n");
                                     write(newsd,"Transaction Successful",23);
-                                    
                                 }
                                 else
                                 {
