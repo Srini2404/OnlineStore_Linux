@@ -89,6 +89,7 @@ int main(int argc,char*argv[])
                 while (1){
 
                     read(newsd,&val,4);
+                    printf("val %d\n", val);
                     if(val==1)
                     {
                         for(int i=0;i<100;i++)
@@ -345,9 +346,10 @@ int main(int argc,char*argv[])
                                     {
                                         for(int j=0;j<10;j++)
                                         {
-                                            // if(ord[i].cart[j].id)
-                                            printf("The productIDs are :%d\n",ord[i].cart[j].id);
-                                            printf("The productname is: %s\n",ord[i].cart[j].name);
+                                            if(ord[i].cart[j].id){
+                                                printf("The productIDs are :%d\n",ord[i].cart[j].id);
+                                                printf("The productname is: %s\n",ord[i].cart[j].name);
+                                            }
                                         }
                                     }
                                 }
@@ -464,8 +466,10 @@ int main(int argc,char*argv[])
                     }
                     else if(val==5)
                     {        
+                        printf("Yo\n");
                         int orderid;
                         read(newsd,&orderid,4);
+                        printf("orderID %d\n",orderid);
                         if(orderid==0)
                         {
                             write(newsd,"Error\n",7);
@@ -473,7 +477,9 @@ int main(int argc,char*argv[])
                         }
                         else
                         {
+                            write(newsd,"Proceed\n",9);
                             struct product ps[10];
+                            // printf("1\n");
                             for(int i=0;i<100;i++)
                             {
                                 if(ord[i].oid == orderid)
@@ -481,10 +487,22 @@ int main(int argc,char*argv[])
                                     for(int j=0;j<10;j++)
                                     {
                                         ps[j] = ord[i].cart[j];
+                                        printf("The name of the product:%s\n",ps[j].name);
                                     }
                                     break;
                                 }
                             }
+                            // Now we are sending the details the 
+                            for(int i=0;i<10;i++)
+                            {
+                                if(ps[i].id!=0){
+                                    write(newsd,&ps[i],sizeof(struct product));
+                                    printf("The value is:%d\n",ps[i].id);
+                                }
+                            }
+                            struct product p3;
+                            p3.id =0;
+                            write(newsd,&p3,sizeof(struct product));
                             struct flock fl;
                             // fl.l_start = SEEK_SET;
                             fl.l_whence = SEEK_SET;
@@ -498,6 +516,8 @@ int main(int argc,char*argv[])
                             int flg = 0;
                             int curidx[10];
                             struct product prod[10];
+                            // printf("2\n");
+                            lseek(fd,0,SEEK_SET);
                             while(read(fd,&p1,sizeof(struct product)))
                             {
                                 for(int i=0;i<10;i++)
@@ -513,6 +533,7 @@ int main(int argc,char*argv[])
                                         }
                                         else
                                         {
+                                            printf("The quantity present in the file is:%d\n",p1.qty);
                                             flg = 1;
                                             break;
                                         }
@@ -522,6 +543,7 @@ int main(int argc,char*argv[])
                                 {
                                     break;
                                 }
+                                // printf("3\n");
                             }
                             if(flg)
                             {
@@ -530,12 +552,15 @@ int main(int argc,char*argv[])
                             }
                             else
                             {
-                                srand(time(0));
-                                write(newsd,"Enter the OTP shown on the screen",34);
-                                int otp = rand();
-                                write(newsd,&otp,4);
-                                int cotp;
-                                read(newsd,&cotp,4);
+                                // srand(time(0));
+                                // write(newsd,"Enter the OTP shown on the screen\n",35);
+                                // int otp = rand()%100;
+                                // write(newsd,&otp,4);
+                                // int cotp;
+                                // read(newsd,&cotp,4);
+                                int cotp = 1;
+                                int otp = 0;
+                                read(newsd,&otp,4);
                                 if(cotp==otp)
                                 {
                                     for(int i=0;i<10;i++)
@@ -554,44 +579,33 @@ int main(int argc,char*argv[])
                                             if(inven[j].id==prod[i].id)
                                             {
                                                 inven[j] = prod[i];
+                            
                                             }
+                                            
                                         }
                                     }
-                                    // create a log file.
-                                    // make the orderid -1.
-                                    FILE * fp;
-                                    fp = fopen(argv[3],"w"); // this is the log file that is generated.
-                                    int amount = 0;
-                                    for(int i=0;i<10;i++)
-                                    {
-                                        if(ps[i].id!=0)
-                                        {
-                                            fwrite("\nProductID ",11,1,fp);
-                                            fwrite(&ps[i].id,sizeof(int),1,fp);
-                                            fwrite("\nProduct Name ",15,1,fp);
-                                            fwrite(&ps[i].name,100,1,fp);
-                                            fwrite("\nPrice ",8,1,fp);
-                                            fwrite(&ps[i].price,sizeof(int),1,fp);
-                                            amount+=ps[i].price;
-                                            fwrite("\nQuantity ",11,1,fp);
-                                            fwrite(&ps[i].qty,4,1,fp);
-                                        }
-                                        
-                                    }
-                                    fwrite("\n Total Price of the bill: ",28,1,fp);
-                                    fwrite("\nThanks for shopping with,Have a great day!",44,1,fp);
-                                    fclose(fp);
+                                    
+                                    int chk = 0;
                                     for(int i=0;i<100;i++)
                                     {
 
-                                        if(ord[i].oid = orderid)
+                                        if(ord[i].oid == orderid)
                                         {
-                                           ord[i].oid = -1;
-                                           break;
+                                            ord[i].oid = -1;
+                                            write(newsd,"Transaction Successful\n",24);
+                                            chk = 1;
+                                            break;
                                         }
                                     }
-                                    printf("Transaction Successful\n");
-                                    write(newsd,"Transaction Successful",23);
+                                    if(chk){
+                                        printf("Transaction Successful\n");
+                                        
+                                    }
+                                    else
+                                    {
+                                        write(newsd,"Transaction Failure\n",21);
+                                        printf("Transaction failure\n");
+                                    }
                                 }
                                 else
                                 {
@@ -601,7 +615,27 @@ int main(int argc,char*argv[])
                             }
                         }
                     }
-
+                    else if(val==6)
+                    {
+                        printf("Shutting Down\n");
+                        int fd3;
+                        fd3 = open(argv[3],O_RDWR); // this is the log file that is generated.
+                        int amount = 0;
+                        int idx = 0;
+                        for(int i=0;i<100;i++)
+                        {
+                            if(inven[i].id=-1)
+                            {
+                                printf("New Product\n");
+                                write(newsd,&inven[i].id,4);
+                                write(newsd,&inven[i].name,100);
+                                write(newsd,&inven[i].price,4);
+                                write(newsd,&inven[i].qty,4);
+                            }
+                        }
+                        printf("Done and thank you!\n");
+                        close(fd3);
+                    }
                 }
                 
             }

@@ -13,7 +13,7 @@ int main()
     if(sckfd==-1)
     {
         perror(" ");
-        // return;
+        return -1;
     }
     struct sockaddr_in sddr;
     sddr.sin_port = htons(8080);
@@ -23,6 +23,7 @@ int main()
     if(cntfd==-1)
     {
         perror(" ");
+        return -1;
     }
     // write(sckfd,"Hello there message from client1",33);
 
@@ -130,7 +131,8 @@ int main()
                     write(sckfd,&qty,4);
                 }
             }
-            read(sckfd,temp,18);
+            printf("Out\n");
+            read(sckfd,temp,50);
             printf("%s",temp);        
             // think of what can be done here.
         }
@@ -191,22 +193,30 @@ int main()
             else if(strcmp(temp,"Error1\n")==0)
             {
                 printf("Order Couldn't be placed due to unavailability of stock\n");
-
             }
             else if(strcmp(temp,"Proceed\n")==0)
             {
                 printf("%s",temp);
                 struct product p;
+                p.id = -1;
                 int totalamount=0;
                 // int i=0
-                read(sckfd,&p,sizeof(struct product));
+                // read(sckfd,&p,sizeof(struct product));
+                // printf("Here id = %d\n", p.id);
                 while(p.id!=0){
-                    printf("Product ID: %d\n",p.id);
-                    printf("Product Name: %s\n",p.name);
-                    printf("Product Quantity : %d\n",p.qty);
-                    printf("Product Price : %d\n",p.price);
-                    totalamount+=p.price*p.qty;
+                    // printf("p.id before = %d\n", p.id);
                     read(sckfd,&p,sizeof(struct product));
+                    // printf("p.id: %d\n", p.id);
+                    if (p.id != 0){
+                        printf("Product ID: %d\n",p.id);
+                        printf("Product Name: %s\n",p.name);
+                        printf("Product Quantity : %d\n",p.qty);
+                        printf("Product Price : %d\n",p.price);
+                        totalamount+=p.price*p.qty;
+                    }
+                    else{
+                        break;
+                    }   
                 }
                 printf("The total price for the order is:%d\n",totalamount);
                 // read(sckfd,&temp,34);
@@ -217,15 +227,9 @@ int main()
                 // printf("%d\n",otp);
                 scanf("%d",&otp);
                 write(sckfd,&otp,4);
-                read(sckfd,&temp,23);
+                read(sckfd,&temp,34);
                 printf("%s",temp);
             }            
-        }
-        else if(option==6)
-        {
-            write(sckfd,&option,4);
-
-            break;
         }
         else
         {
@@ -234,11 +238,9 @@ int main()
 
         printf("Enter 1 to see all the products listed\n");
         printf("Enter 2 to see your cart\n");
-        printf("Enter 3 to create your order(new cart)\n");
+        printf("Enter 3 to create your order(new cart) or to add products to an your existing cart\n");
         printf("Enter 4 to edit your cart\n");
         printf("Enter 5 to confirm the order\n");
-        printf("Enter 6 to shutdown the shop and record the ones in the log file\n");
-    // getchar();
     }
     shutdown(sckfd,2);
     return 0;
