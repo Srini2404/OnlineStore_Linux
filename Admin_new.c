@@ -530,7 +530,7 @@ void server_confirm_order(char arg[],int newsd,int fd2,int fd)
                     char buff[150];
                     for(int n=0;n<10;n++)
                     {
-                        if(strcmp(ps[n].name," ")==0)
+                        if(strcmp(ps[n].name," ")!=0)
                         {
                             sprintf(buff,"Product Name: %s\n",ps[n].name);
                             write(fd3,buff,strlen(buff));
