@@ -1,0 +1,31 @@
+Product Name: Pen
+Product Price: 10
+Product Quantity:1
+Product Name: Pencil
+Product Price: 25
+Product Quantity:2
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Product Name: 
+Product Price: 0
+Product Quantity:0
+Total Amount:60

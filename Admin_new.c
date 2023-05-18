@@ -53,7 +53,7 @@ void server_send_cart(int fd2,int newsd)
         write(newsd,"Invalid customerID\n",20);
     }
 }
-void server_create_order(int fd,int fd2,int newsd,int *odno)
+void server_create_order(int fd,int fd2,int newsd,int odno)
 {
     // printf("Hello there\n");
     int cusid;
@@ -234,7 +234,8 @@ void server_create_order(int fd,int fd2,int newsd,int *odno)
                                     found++;
 
                                     if (!check){
-                                        o1.oid = *(odno)++;
+                                        o1.oid = odno;
+                                        // *(odno) = *(odno)+1;
                                     }
                                     check = 1;
                                     chk = 1;
@@ -439,6 +440,7 @@ void server_confirm_order(char arg[],int newsd,int fd2,int fd)
                     }
                     else{
                         // printf("The quantity present in the file is %d\n", p1.qty);
+                        flg = 1;
                         printf("The quantity present in the file is %d\n",p1.qty);
                         break;
                     }
@@ -910,7 +912,17 @@ int main(int argc,char*argv[])
                     }
                     else if(val==3)
                     {
-                        server_create_order(fd,fd2,newsd,&odno);
+                        struct order or;
+                        int orderid;
+                        while (read(fd2, &or, sizeof(struct order)))
+                        {
+                            if(or.oid>orderid)
+                            {
+                                orderid = or.oid;
+                            }
+                        }
+                        lseek(fd2,0,SEEK_SET);
+                        server_create_order(fd,fd2,newsd,orderid+1);
                     }
                     else if(val==4)
                     {

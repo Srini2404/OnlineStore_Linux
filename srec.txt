@@ -1,2 +1,2 @@
-1 Pencil 10 25
-2 Pen 10 25
+1 Pen 10 10
+2 Pencil 10 25
